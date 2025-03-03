@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: busybox-daemonset
+  labels:
+    app: busybox
+spec:
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      volumes:
+        - name: shared-volume
+          emptyDir: {}
+
+      initContainers:
+        - name: init-container
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - "date > /tmp/date.log && cat /tmp/date.log"
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /tmp
+
+      containers:
+        - name: main-container
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - "if [ -f /tmp/date.log ]; then echo 'File exists!'; cat /tmp/date.log; else echo 'File not found!'; fi"
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /tmp
+
